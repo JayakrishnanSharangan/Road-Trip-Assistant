@@ -21,11 +21,11 @@ def get_coordinates(place):
         response.raise_for_status()
         data = response.json()
         if not data:
-            print(f"⚠️ No results found for: {place}")
+            print(f"No results found for: {place}")
             return None
         return float(data[0]["lat"]), float(data[0]["lon"])
     except requests.exceptions.RequestException as e:
-        print(f"❌ Error fetching coordinates for {place}: {e}")
+        print(f"Error fetching coordinates for {place}: {e}")
         return None
 
 def get_route_coordinates(start_coords, end_coords):
@@ -38,7 +38,7 @@ def get_route_coordinates(start_coords, end_coords):
             return None
         return [(lat, lon) for lon, lat in route_data["routes"][0]["geometry"]["coordinates"]]
     except requests.exceptions.RequestException as e:
-        print(f"❌ Error fetching route data: {e}")
+        print(f"Error fetching route data: {e}")
         return None
 
 def get_attractions_along_route(route_coords, radius=10000, max_queries=10):
@@ -59,8 +59,9 @@ def get_attractions_along_route(route_coords, radius=10000, max_queries=10):
         );
         out center;
         """
+        headers = {"User-Agent": "RoadTripApp/1.0"}
         try:
-            response = requests.post(OVERPASS_API, data=query)
+            response = requests.post(OVERPASS_API, data=query, headers=headers)
             response.raise_for_status()
             data = response.json()
             for element in data.get("elements", []):
@@ -70,9 +71,9 @@ def get_attractions_along_route(route_coords, radius=10000, max_queries=10):
                 if name and elat and elon:
                     attractions.append((name, elat, elon))
         except requests.exceptions.RequestException as e:
-            print(f"❌ Error fetching attractions: {e}")
+            print(f"Error fetching attractions: {e}")
 
-    print(f"🎯 Found {len(attractions)} attractions in {len(indices)} Overpass queries")
+    print(f"Found {len(attractions)} attractions in {len(indices)} Overpass queries")
     return attractions
 
 @app.route("/")
@@ -110,4 +111,4 @@ def get_route():
     return render_template("map.html")
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0')

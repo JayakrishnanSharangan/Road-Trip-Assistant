@@ -1,0 +1,14 @@
+.git
+.github
+k8s
+Jenkinsfile
+Dockerfile
+README.md
+attractions.json
+static/map.html
+test.py
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+.pytest_cache

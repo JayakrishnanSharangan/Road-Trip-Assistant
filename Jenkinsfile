@@ -32,6 +32,7 @@ pipeline {
             steps {
                 echo "Updating deployment with new image..."
                 bat "kubectl apply -f k8s/"
+                bat "kubectl set image deployment/${APP_NAME} ${APP_NAME}=${APP_NAME}:v${BUILD_NUMBER}"
                 bat "kubectl rollout status deployment/${APP_NAME}"
             }
         }

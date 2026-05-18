@@ -19,14 +19,16 @@ spec:
     spec:
       containers:
       - name: road-trip-assistant
-        image: road-trip-assistant:v2
+        image: road-trip-assistant:latest
         imagePullPolicy: Never
         ports:
         - containerPort: 5000
         resources:
           limits:
+            cpu: "250m"
             memory: "256Mi"
           requests:
+            cpu: "100m"
             memory: "128Mi"
         livenessProbe:
           httpGet:

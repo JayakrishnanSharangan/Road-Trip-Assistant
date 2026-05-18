@@ -3,6 +3,8 @@ pipeline {
 
     environment {
         APP_NAME = "road-trip-assistant"
+        MINIKUBE_HOME = "C:\\Users\\USER"
+        KUBECONFIG = "C:\\Users\\USER\\.kube\\config"
     }
 
     stages {

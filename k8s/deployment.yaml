@@ -3,12 +3,9 @@ kind: Deployment
 metadata:
   name: road-trip-assistant
 spec:
-  replicas: 2
+  replicas: 1
   strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 0
+    type: Recreate # Instantly drops old pod memory allocations before spinning up new build context
   selector:
     matchLabels:
       app: road-trip-assistant
@@ -25,22 +22,14 @@ spec:
         - containerPort: 5000
         resources:
           limits:
-            cpu: "1000m"      # Grants 1 full CPU core to handle multi-threaded startup smoothly
-            memory: "512Mi"    # Raises memory ceiling to prevent Out-Of-Memory (OOM) kills
+            cpu: "800m"
+            memory: "512Mi"
           requests:
             cpu: "200m"
             memory: "256Mi"
-        livenessProbe:
-          httpGet:
-            path: /
-            port: 5000
-          initialDelaySeconds: 30 # Gives Flask plenty of time to build thread pools before checks begin
-          periodSeconds: 20
-          timeoutSeconds: 5
         readinessProbe:
           httpGet:
             path: /
             port: 5000
-          initialDelaySeconds: 25 # Increased warmup window so it won't crash during asset parsing
-          periodSeconds: 10
-          timeoutSeconds: 5
+          initialDelaySeconds: 10
+          periodSeconds: 5

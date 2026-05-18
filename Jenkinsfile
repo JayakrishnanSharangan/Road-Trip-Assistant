@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent { label 'user-agent' }
 
     environment {
         APP_NAME = "road-trip-assistant"

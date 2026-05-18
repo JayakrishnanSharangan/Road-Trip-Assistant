@@ -180,5 +180,7 @@ def api_route():
         "attractions": attractions
     })
 
-if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000)
+if __name__ == '__main__':
+    # CRITICAL: Binding to '0.0.0.0' opens the container's network interface
+    # This allows the Kubernetes readiness probe to see and verify the app's health
+    app.run(host='0.0.0.0', port=5000, debug=False)

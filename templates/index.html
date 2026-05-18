@@ -2,18 +2,1160 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>AI Road Trip Assistant</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Road Trip Assistant - Interactive Dashboard</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet.js Maps CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    
+    <style>
+        :root {
+            --bg-primary: #070913;
+            --bg-secondary: #0c0f24;
+            --panel-bg: rgba(15, 23, 42, 0.45);
+            --panel-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --primary-glow: #6366f1;
+            --secondary-glow: #a855f7;
+            --accent-cyan: #38bdf8;
+            --accent-emerald: #10b981;
+            --accent-rose: #f43f5e;
+            --accent-amber: #f59e0b;
+            --font-display: 'Outfit', sans-serif;
+            --font-sans: 'Inter', sans-serif;
+            --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Premium Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.3);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.3);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(168, 85, 247, 0.5);
+        }
+
+        header {
+            padding: 1.25rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--panel-border);
+            backdrop-filter: blur(10px);
+            background: rgba(7, 9, 19, 0.5);
+            z-index: 10;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, var(--primary-glow) 0%, var(--secondary-glow) 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+            animation: pulse-glow 3s infinite alternate;
+        }
+
+        .logo-icon svg {
+            width: 22px;
+            height: 22px;
+            fill: #fff;
+        }
+
+        .logo-text h1 {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            background: linear-gradient(to right, #fff 30%, #a855f7 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-text p {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .github-link {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--panel-border);
+            transition: var(--transition-smooth);
+        }
+
+        .github-link:hover {
+            background: rgba(99, 102, 241, 0.15);
+            border-color: rgba(99, 102, 241, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(99, 102, 241, 0.1);
+        }
+
+        .github-link svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        .dashboard-container {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 78px);
+            position: relative;
+        }
+
+        /* Sidebar Glassmorphism */
+        .sidebar {
+            width: 420px;
+            background: var(--panel-bg);
+            border-right: 1px solid var(--panel-border);
+            backdrop-filter: blur(16px);
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+            gap: 1.5rem;
+            overflow-y: auto;
+            z-index: 5;
+            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.25);
+        }
+
+        .panel-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 14px;
+            padding: 1.25rem;
+            transition: var(--transition-smooth);
+        }
+
+        .panel-card:hover {
+            border-color: rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .card-title {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #fff;
+        }
+
+        .card-title svg {
+            width: 18px;
+            height: 18px;
+            color: var(--primary-glow);
+        }
+
+        .form-group {
+            position: relative;
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group svg {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 18px;
+            height: 18px;
+            color: var(--text-secondary);
+            pointer-events: none;
+            transition: var(--transition-smooth);
+        }
+
+        .form-input {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--panel-border);
+            border-radius: 10px;
+            padding: 0.85rem 1rem 0.85rem 2.5rem;
+            color: #fff;
+            font-family: var(--font-sans);
+            font-size: 0.9rem;
+            transition: var(--transition-smooth);
+        }
+
+        .form-input::placeholder {
+            color: rgba(148, 163, 184, 0.6);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-glow);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.25);
+            background: rgba(15, 23, 42, 0.85);
+        }
+
+        .form-input:focus + svg {
+            color: var(--primary-glow);
+        }
+
+        .btn-submit {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary-glow) 0%, var(--secondary-glow) 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 0.9rem;
+            color: #fff;
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: var(--transition-smooth);
+            box-shadow: 0 4px 20px rgba(168, 85, 247, 0.25);
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(99, 102, 241, 0.45);
+            filter: brightness(1.1);
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+
+        .btn-submit:disabled {
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.2);
+            border: 1px solid var(--panel-border);
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        /* Quick Suggestions */
+        .suggestions-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+
+        .suggestion-chip {
+            font-size: 0.75rem;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 6px;
+            padding: 0.35rem 0.65rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: var(--transition-smooth);
+        }
+
+        .suggestion-chip:hover {
+            background: rgba(99, 102, 241, 0.1);
+            border-color: rgba(99, 102, 241, 0.3);
+            color: #fff;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            padding: 0.85rem;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .stat-val {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #fff;
+            background: linear-gradient(to right, #fff, var(--accent-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-lbl {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .stat-card svg {
+            width: 16px;
+            height: 16px;
+            color: var(--accent-cyan);
+            margin-bottom: 0.25rem;
+        }
+
+        /* Attractions Feed */
+        .attractions-section {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
+            gap: 0.75rem;
+        }
+
+        .attractions-list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .badge-count {
+            background: rgba(99, 102, 241, 0.2);
+            border: 1px solid rgba(99, 102, 241, 0.4);
+            color: #cbd5e1;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.15rem 0.5rem;
+            border-radius: 20px;
+        }
+
+        .attractions-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            padding-right: 0.25rem;
+        }
+
+        .attraction-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 10px;
+            padding: 0.85rem;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .attraction-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 3px;
+            background: var(--primary-glow);
+            opacity: 0;
+            transition: var(--transition-smooth);
+        }
+
+        .attraction-card:hover {
+            background: rgba(99, 102, 241, 0.04);
+            border-color: rgba(99, 102, 241, 0.2);
+            transform: translateX(4px);
+        }
+
+        .attraction-card.active {
+            background: rgba(99, 102, 241, 0.08);
+            border-color: rgba(99, 102, 241, 0.4);
+        }
+
+        .attraction-card.active::before {
+            opacity: 1;
+        }
+
+        .attr-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .attr-name {
+            font-family: var(--font-display);
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #fff;
+            line-height: 1.25;
+        }
+
+        .attr-type-badge {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 700;
+            padding: 0.2rem 0.45rem;
+            border-radius: 4px;
+        }
+
+        .type-museum {
+            background: rgba(56, 189, 248, 0.15);
+            color: var(--accent-cyan);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+        }
+
+        .type-viewpoint {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-emerald);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .type-attraction {
+            background: rgba(168, 85, 247, 0.15);
+            color: var(--secondary-glow);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+        }
+
+        .attr-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .attr-location-btn {
+            background: none;
+            border: none;
+            color: var(--accent-cyan);
+            cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            transition: var(--transition-smooth);
+        }
+
+        .attr-location-btn:hover {
+            color: #fff;
+            text-decoration: underline;
+        }
+
+        .attr-location-btn svg {
+            width: 12px;
+            height: 12px;
+        }
+
+        /* Loading Skeleton */
+        .skeleton {
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.02) 25%, rgba(255, 255, 255, 0.08) 50%, rgba(255, 255, 255, 0.02) 75%);
+            background-size: 200% 100%;
+            animation: loading-shimmer 1.5s infinite;
+            border-radius: 6px;
+        }
+
+        .skeleton-text {
+            height: 16px;
+            width: 80%;
+            margin-bottom: 0.5rem;
+        }
+
+        .skeleton-pill {
+            height: 20px;
+            width: 60px;
+        }
+
+        .skeleton-block {
+            height: 70px;
+            border-radius: 10px;
+        }
+
+        /* Map Container */
+        .map-wrapper {
+            flex: 1;
+            position: relative;
+            background: #0d0e14;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Floating Overlays on Map */
+        .map-instructions {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid var(--panel-border);
+            backdrop-filter: blur(12px);
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            pointer-events: none;
+            transition: var(--transition-smooth);
+            opacity: 0.9;
+        }
+
+        .map-instructions svg {
+            width: 16px;
+            height: 16px;
+            color: var(--accent-amber);
+        }
+
+        .empty-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 3rem 1.5rem;
+            color: var(--text-secondary);
+            gap: 1rem;
+            background: rgba(255,255,255,0.01);
+            border: 1px dashed rgba(255,255,255,0.08);
+            border-radius: 14px;
+        }
+
+        .empty-placeholder svg {
+            width: 48px;
+            height: 48px;
+            color: rgba(99, 102, 241, 0.4);
+        }
+
+        .empty-placeholder h3 {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .empty-placeholder p {
+            font-size: 0.8rem;
+            line-height: 1.4;
+        }
+
+        /* Leaflet Popups Glassmorphism */
+        .leaflet-popup-content-wrapper {
+            background: rgba(15, 23, 42, 0.9) !important;
+            border: 1px solid rgba(255, 255, 255, 0.12) !important;
+            backdrop-filter: blur(12px) !important;
+            color: #fff !important;
+            border-radius: 12px !important;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5) !important;
+        }
+
+        .leaflet-popup-tip {
+            background: rgba(15, 23, 42, 0.9) !important;
+            border-left: 1px solid rgba(255, 255, 255, 0.12) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+        }
+
+        .popup-card {
+            padding: 0.25rem 0;
+            font-family: var(--font-sans);
+        }
+
+        .popup-title {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 0.95rem;
+            margin-bottom: 0.25rem;
+            color: #fff;
+        }
+
+        .popup-desc {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            text-transform: capitalize;
+        }
+
+        .popup-link {
+            color: var(--accent-cyan);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .popup-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Custom Marker CSS */
+        .marker-pulse {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .start-pulse {
+            width: 25px;
+            height: 25px;
+            background: rgba(16, 185, 129, 0.4);
+            animation: ripple 1.5s infinite;
+        }
+
+        .end-pulse {
+            width: 25px;
+            height: 25px;
+            background: rgba(244, 63, 94, 0.4);
+            animation: ripple 1.5s infinite;
+        }
+
+        .pin {
+            filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5));
+            transition: var(--transition-smooth);
+        }
+
+        .pin:hover {
+            transform: scale(1.1);
+        }
+
+        /* Custom Attraction Dot Marker */
+        .attraction-dot {
+            width: 14px;
+            height: 14px;
+            background: var(--accent-amber);
+            border: 2px solid #000;
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--accent-amber);
+            transition: var(--transition-smooth);
+            cursor: pointer;
+        }
+
+        .attraction-dot:hover {
+            transform: scale(1.4);
+            background: #fff;
+            box-shadow: 0 0 15px #fff;
+        }
+
+        .attraction-dot.highlighted {
+            transform: scale(1.6);
+            background: #fff;
+            border-color: var(--primary-glow);
+            box-shadow: 0 0 20px var(--primary-glow), 0 0 0 6px rgba(99, 102, 241, 0.3);
+        }
+
+        /* Animations */
+        @keyframes pulse-glow {
+            0% {
+                box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+            }
+            100% {
+                box-shadow: 0 0 25px rgba(168, 85, 247, 0.5);
+            }
+        }
+
+        @keyframes ripple {
+            0% {
+                width: 10px;
+                height: 10px;
+                opacity: 0.8;
+            }
+            100% {
+                width: 35px;
+                height: 35px;
+                opacity: 0;
+            }
+        }
+
+        @keyframes loading-shimmer {
+            0% {
+                background-position: 200% 0;
+            }
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        /* Responsive Layout */
+        @media (max-width: 1024px) {
+            .dashboard-container {
+                flex-direction: column-reverse;
+                height: auto;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                max-height: 500px;
+                border-right: none;
+                border-top: 1px solid var(--panel-border);
+            }
+
+            .map-wrapper {
+                height: 400px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>AI Road Trip Assistant</h1>
-    <form action="/route" method="get">
-        <label for="start">Start Location:</label>
-        <input type="text" id="start" name="start" placeholder="Enter a city or place" required><br>
+    <header>
+        <div class="logo-container">
+            <div class="logo-icon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                </svg>
+            </div>
+            <div class="logo-text">
+                <h1>AI Road Trip Assistant</h1>
+                <p>Curate scenic journeys with local points of interest</p>
+            </div>
+        </div>
+        <a href="https://github.com/JayakrishnanSharangan/Road-Trip-Assistant" target="_blank" class="github-link">
+            <svg viewBox="0 0 24 24">
+                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+            </svg>
+            GitHub Repo
+        </a>
+    </header>
 
-        <label for="end">Destination:</label>
-        <input type="text" id="end" name="end" placeholder="Enter a city or place" required><br>
+    <div class="dashboard-container">
+        <!-- Sidebar Controls & Info -->
+        <div class="sidebar">
+            <!-- Search Widget -->
+            <div class="panel-card">
+                <div class="card-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    Plan Your Road Trip
+                </div>
+                <form id="routeForm">
+                    <div class="form-group">
+                        <input type="text" id="startInput" class="form-input" placeholder="Start Location (e.g. Kochi)" required autocomplete="off">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="endInput" class="form-input" placeholder="Destination (e.g. Munnar)" required autocomplete="off">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 22l10-6 10 6L12 2z"/></svg>
+                    </div>
+                    
+                    <button type="submit" id="submitBtn" class="btn-submit">
+                        <svg id="btnIcon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+                        <span id="btnText">Plan Scenic Route</span>
+                    </button>
+                </form>
+                
+                <div class="suggestions-container">
+                    <span class="suggestion-chip" onclick="applySuggestion('Kochi', 'Munnar')">Kochi ➔ Munnar</span>
+                    <span class="suggestion-chip" onclick="applySuggestion('San Francisco', 'Los Angeles')">SF ➔ LA</span>
+                    <span class="suggestion-chip" onclick="applySuggestion('Seattle', 'Portland')">Seattle ➔ Portland</span>
+                </div>
+            </div>
 
-        <button type="submit">Get Route</button>
-    </form>
+            <!-- Trip Stats Widget (Visible after search) -->
+            <div id="statsCard" class="panel-card" style="display: none;">
+                <div class="card-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    Route Statistics
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="2" ry="2"/><line x1="16" y1="8" x2="20" y2="8"/><line x1="16" y1="12" x2="23" y2="12"/><line x1="1" y1="16" x2="23" y2="16"/></svg>
+                        <span id="statDistance" class="stat-val">-</span>
+                        <span class="stat-lbl">Distance</span>
+                    </div>
+                    <div class="stat-card">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        <span id="statDuration" class="stat-val">-</span>
+                        <span class="stat-lbl">Est. Time</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attractions List Widget -->
+            <div class="attractions-section">
+                <div class="attractions-list-header">
+                    <div class="card-title" style="margin-bottom: 0;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        Points of Interest
+                    </div>
+                    <span id="attractionsCount" class="badge-count" style="display: none;">0 Found</span>
+                </div>
+                
+                <div id="attractionsList" class="attractions-list">
+                    <!-- Dynamic feed or placeholder -->
+                    <div class="empty-placeholder" id="placeholderView">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+                        <h3>Ready for Adventure?</h3>
+                        <p>Enter your starting point and destination to map a neon path and automatically discover historic forts, scenic viewpoints, and museums along your drive.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dynamic Map -->
+        <div class="map-wrapper">
+            <div class="map-instructions" id="mapTooltip">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                Hover over attractions to bounce them on the map!
+            </div>
+            <div id="map"></div>
+        </div>
+    </div>
+
+    <!-- Leaflet.js Mapping Library Script -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    
+    <script>
+        let map;
+        let routeGlowLine, routeCoreLine;
+        let startMarker, endMarker;
+        let attractionMarkers = [];
+        let attractionsData = [];
+
+        // Initialize Leaflet Map
+        function initMap() {
+            // Default center around central coordinates
+            map = L.map('map', {
+                zoomControl: false
+            }).setView([10.8505, 76.2711], 7); // Defaults to beautiful Kerala region
+
+            // Custom zoom control in bottom right for slick aesthetics
+            L.control.zoom({
+                position: 'bottomright'
+            }).addTo(map);
+
+            // Sleek dark-mode tile layer
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                subdomains: 'abcd',
+                maxZoom: 20
+            }).addTo(map);
+        }
+
+        // Apply pre-defined route quick suggestions
+        function applySuggestion(start, end) {
+            document.getElementById('startInput').value = start;
+            document.getElementById('endInput').value = end;
+            document.getElementById('routeForm').dispatchEvent(new Event('submit'));
+        }
+
+        // Convert distance in meters to a polished representation
+        function formatDistance(meters) {
+            if (meters >= 1000) {
+                const km = (meters / 1000).toFixed(1);
+                const miles = (km * 0.621371).toFixed(1);
+                return `${km} km (${miles} mi)`;
+            }
+            return `${meters} m`;
+        }
+
+        // Convert duration in seconds to formatted text
+        function formatDuration(seconds) {
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            if (h > 0) {
+                return `${h}h ${m}m`;
+            }
+            return `${m} mins`;
+        }
+
+        // Create Custom SVG Map Markers
+        const createStartIcon = () => L.divIcon({
+            className: 'custom-pin-start',
+            html: `<div class="marker-pulse start-pulse"></div><div class="pin start-pin"><svg viewBox="0 0 24 24" width="28" height="28"><path fill="#10b981" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg></div>`,
+            iconSize: [30, 42],
+            iconAnchor: [15, 42],
+            popupAnchor: [0, -40]
+        });
+
+        const createEndIcon = () => L.divIcon({
+            className: 'custom-pin-end',
+            html: `<div class="marker-pulse end-pulse"></div><div class="pin end-pin"><svg viewBox="0 0 24 24" width="28" height="28"><path fill="#ef4444" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg></div>`,
+            iconSize: [30, 42],
+            iconAnchor: [15, 42],
+            popupAnchor: [0, -40]
+        });
+
+        const createAttractionIcon = (isActive = false) => L.divIcon({
+            className: 'custom-pin-attraction',
+            html: `<div class="attraction-dot ${isActive ? 'highlighted' : ''}"></div>`,
+            iconSize: [16, 16],
+            iconAnchor: [8, 8],
+            popupAnchor: [0, -10]
+        });
+
+        // Trigger Marker Highlight on card hover
+        function highlightAttraction(index, highlight) {
+            if (attractionMarkers[index]) {
+                const marker = attractionMarkers[index];
+                if (highlight) {
+                    marker.setIcon(createAttractionIcon(true));
+                    marker.setZIndexOffset(1000);
+                } else {
+                    marker.setIcon(createAttractionIcon(false));
+                    marker.setZIndexOffset(0);
+                }
+            }
+        }
+
+        // Focus map camera on coordinate
+        function focusOnAttraction(index) {
+            if (attractionsData[index] && attractionMarkers[index]) {
+                const attr = attractionsData[index];
+                const marker = attractionMarkers[index];
+                map.setView([attr.lat, attr.lon], 14, { animate: true, duration: 1.2 });
+                marker.openPopup();
+                
+                // Highlight corresponding feed card
+                document.querySelectorAll('.attraction-card').forEach(c => c.classList.remove('active'));
+                const card = document.getElementById(`attr-card-${index}`);
+                if (card) {
+                    card.classList.add('active');
+                    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            }
+        }
+
+        // Clear existing map layers for a new routing search
+        function resetMapLayers() {
+            if (routeGlowLine) map.removeLayer(routeGlowLine);
+            if (routeCoreLine) map.removeLayer(routeCoreLine);
+            if (startMarker) map.removeLayer(startMarker);
+            if (endMarker) map.removeLayer(endMarker);
+            
+            attractionMarkers.forEach(m => map.removeLayer(m));
+            attractionMarkers = [];
+            attractionsData = [];
+        }
+
+        // Form Submit Handler
+        document.getElementById('routeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const start = document.getElementById('startInput').value.trim();
+            const end = document.getElementById('endInput').value.trim();
+            if (!start || !end) return;
+
+            // Loading state UI update
+            const submitBtn = document.getElementById('submitBtn');
+            const btnIcon = document.getElementById('btnIcon');
+            const btnText = document.getElementById('btnText');
+            
+            submitBtn.disabled = true;
+            btnText.textContent = "Plotting Route...";
+            btnIcon.outerHTML = `<svg id="btnIcon" class="marker-pulse" style="animation: ripple 1s infinite;" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>`;
+            
+            // Show Skeleton loader in list
+            const attractionsList = document.getElementById('attractionsList');
+            attractionsList.innerHTML = `
+                <div class="skeleton skeleton-block"></div>
+                <div class="skeleton skeleton-block"></div>
+                <div class="skeleton skeleton-block"></div>
+            `;
+            document.getElementById('attractionsCount').style.display = 'none';
+
+            // Make Asynchronous API Request to parallelized Flask backend
+            fetch(`/api/route?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`)
+                .then(response => {
+                    if (!response.ok) throw new Error("Could not process route coordinates. Please ensure locations are spelled correctly.");
+                    return response.json();
+                })
+                .then(data => {
+                    resetMapLayers();
+                    attractionsData = data.attractions;
+
+                    // Plot glowing neon route polylines
+                    const routePoints = data.geometry;
+                    
+                    // Layer 1: Semi-transparent Neon glow outline
+                    routeGlowLine = L.polyline(routePoints, {
+                        color: 'var(--primary-glow)',
+                        weight: 8,
+                        opacity: 0.35,
+                        lineCap: 'round',
+                        lineJoin: 'round'
+                    }).addTo(map);
+
+                    // Layer 2: Glowing cyan core line
+                    routeCoreLine = L.polyline(routePoints, {
+                        color: 'var(--accent-cyan)',
+                        weight: 4,
+                        opacity: 0.9,
+                        lineCap: 'round',
+                        lineJoin: 'round'
+                    }).addTo(map);
+
+                    // Draw start and end pins
+                    const startCoords = data.start.coords;
+                    const endCoords = data.end.coords;
+
+                    startMarker = L.marker(startCoords, { icon: createStartIcon() })
+                        .bindPopup(`<div class="popup-card"><div class="popup-title">Start Point</div><div class="popup-desc">${data.start.name}</div></div>`)
+                        .addTo(map);
+
+                    endMarker = L.marker(endCoords, { icon: createEndIcon() })
+                        .bindPopup(`<div class="popup-card"><div class="popup-title">Destination</div><div class="popup-desc">${data.end.name}</div></div>`)
+                        .addTo(map);
+
+                    // Adjust map viewport boundary to enclose the route beautifully
+                    const bounds = L.latLngBounds([startCoords, endCoords, ...routePoints]);
+                    map.fitBounds(bounds, { padding: [50, 50] });
+
+                    // Render Stats
+                    document.getElementById('statsCard').style.display = 'block';
+                    document.getElementById('statDistance').textContent = formatDistance(data.distance);
+                    document.getElementById('statDuration').textContent = formatDuration(data.duration);
+
+                    // Render discovered attractions markers & cards
+                    const countBadge = document.getElementById('attractionsCount');
+                    countBadge.textContent = `${data.attractions.length} Found`;
+                    countBadge.style.display = 'inline-block';
+
+                    if (data.attractions.length === 0) {
+                        attractionsList.innerHTML = `
+                            <div class="empty-placeholder">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+                                <h3>No Scenic Spots Spotted</h3>
+                                <p>No major attractions found within 10 km along this route. Try another journey!</p>
+                            </div>
+                        `;
+                    } else {
+                        attractionsList.innerHTML = '';
+                        document.getElementById('mapTooltip').style.opacity = '1';
+                        
+                        data.attractions.forEach((attr, idx) => {
+                            // Add marker to map
+                            const marker = L.marker([attr.lat, attr.lon], { icon: createAttractionIcon() })
+                                .bindPopup(`
+                                    <div class="popup-card">
+                                        <div class="popup-title">${attr.name}</div>
+                                        <div class="popup-desc">Category: ${attr.type}</div>
+                                        <a href="https://www.google.com/search?q=${encodeURIComponent(attr.name)}" target="_blank" class="popup-link">
+                                            Search Web
+                                            <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                                        </a>
+                                    </div>
+                                `)
+                                .addTo(map);
+
+                            // Setup marker sync events
+                            marker.on('click', () => focusOnAttraction(idx));
+                            attractionMarkers.push(marker);
+
+                            // Render Side Card
+                            const card = document.createElement('div');
+                            card.className = 'attraction-card';
+                            card.id = `attr-card-${idx}`;
+                            card.innerHTML = `
+                                <div class="attr-header">
+                                    <div class="attr-name">${attr.name}</div>
+                                    <span class="attr-type-badge type-${attr.type}">${attr.type}</span>
+                                </div>
+                                <div class="attr-footer">
+                                    <span>Lat: ${attr.lat.toFixed(4)}, Lon: ${attr.lon.toFixed(4)}</span>
+                                    <button class="attr-location-btn" onclick="focusOnAttraction(${idx}); event.stopPropagation();">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+                                        Locate
+                                    </button>
+                                </div>
+                            `;
+
+                            // Add card hover highlighting bindings
+                            card.addEventListener('mouseenter', () => highlightAttraction(idx, true));
+                            card.addEventListener('mouseleave', () => highlightAttraction(idx, false));
+                            card.addEventListener('click', () => focusOnAttraction(idx));
+
+                            attractionsList.appendChild(card);
+                        });
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert(err.message || "An unexpected error occurred while planning the trip.");
+                    attractionsList.innerHTML = `
+                        <div class="empty-placeholder" style="border-color: rgba(244,63,94,0.3)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--accent-rose)"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                            <h3 style="color: var(--accent-rose)">Routing Error</h3>
+                            <p>${err.message || 'Ensure your start and destination are typed correctly and that your server is connected.'}</p>
+                        </div>
+                    `;
+                })
+                .finally(() => {
+                    // Restore active button states
+                    submitBtn.disabled = false;
+                    btnText.textContent = "Plan Scenic Route";
+                    submitBtn.innerHTML = `
+                        <svg id="btnIcon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+                        <span id="btnText">Plan Scenic Route</span>
+                    `;
+                });
+        });
+
+        // Initialize App on DOM Content Loaded
+        window.addEventListener('DOMContentLoaded', () => {
+            initMap();
+            
+            // Check URL query parameters for dynamic direct loading
+            const urlParams = new URLSearchParams(window.location.search);
+            const start = urlParams.get('start');
+            const end = urlParams.get('end');
+            
+            if (start && end) {
+                document.getElementById('startInput').value = start;
+                document.getElementById('endInput').value = end;
+                document.getElementById('routeForm').dispatchEvent(new Event('submit'));
+            }
+        });
+    </script>
 </body>
 </html>
